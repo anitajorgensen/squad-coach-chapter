@@ -7,8 +7,8 @@ import groovy.time.TimeCategory;
 */
 
 
-def getGETRequest(String access_token) {
-  def args = getArguments();
+def getGETRequest(String access_token, String team) {
+  def args = getArguments(team);
   def arguments = "";
   for (int i=0;i<args.size();i++) {
     arguments += args.get(i)
@@ -23,19 +23,23 @@ def getGETRequest(String access_token) {
   return get_request;
 }
 
-def getArguments() {
+def getArguments(String team) {
   def is = "is:merged";
   def repo = "repo:appian/ae";
   def type = "type:pr";
   def merged_after = "merged:>=2017-03-01"
   def base = "base:master"
-  def teamSet = ['sail']
   def teams = "";
-  for (int i=0;i<teamSet.size();i++) {
-    teams+="team:appian/squad-"+teamSet[i];
-    if (i < teamSet.size()-1) {
-      teams += "+"
+  if (team == "all") {
+    def teamSet = ['sail']
+    for (int i=0;i<teamSet.size();i++) {
+      teams+="team:appian/squad-"+teamSet[i];
+      if (i < teamSet.size()-1) {
+        teams += "+"
+      }
     }
+  } else {
+    teams = "team:appian/squad-"+team;
   }
   def per_page = "&per_page=100";
   def args = [is, repo, type, merged_after, base, teams, per_page];
@@ -87,10 +91,10 @@ def getCommentsInfo(String url, String access_token) {
   return [created_at, po_review];
 }
 
-def getAllStats(String access_token, String filename) {
+def getStats(String access_token, String filename, String team) {
   // TODO: allow this to take in a String for team (team name or all)
   // TODO: allow this to take in a boolean for calculating averages
-  def pr_request = getGETRequest(access_token);
+  def pr_request = getGETRequest(access_token, team);
   def parsedResponse = getParsedResponse(pr_request);
   def numOfPRs = parsedResponse.items.size();
   def output = new File(filename);
@@ -126,17 +130,18 @@ def getAllStats(String access_token, String filename) {
   }
 }
 
-if (args.size() == 0) {
-  println("Empty arguments passed");
-  return;
-} else if (args[0] == "all-stats" && args.size() == 3) {
-  getAllStats(args[1], args[2]);
+if (args.size() == 3 && args[0] == "all-stats") {
+  getStats(args[1], args[2], "all");
   println("all-stats have been written to "+args[2]);
-} else if (args[0] == "team-averages" && args.size() == 3) {
+} else if (args.size() == 4 && args[0] == "team-stats") {
+  getStats(args[1], args[2], args[3]);
+  println("team-stats have been written to "+args[2]+" for "+args[3]);
+} else if (args.size() == 3 && args[0] == "team-averages") {
   println("TODO: Implement for team averages");
 } else {
   println("Arguments passed did not match any of the commands");
   println("Options: ");
   println("all-stats {access_token} {output_file_path}");
+  println("team-stats {access_token} {output_file_path} {team_name}");
   println("team-averages {team_name} {output_file_path}");
 }
