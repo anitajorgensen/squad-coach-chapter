@@ -1,5 +1,7 @@
 import groovy.json.JsonSlurper;
 import groovy.time.TimeCategory;
+import groovy.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 /**
 * Usage: TODO
@@ -91,57 +93,87 @@ def getCommentsInfo(String url, String access_token) {
   return [created_at, po_review];
 }
 
-def getStats(String access_token, String filename, String team) {
-  // TODO: allow this to take in a String for team (team name or all)
-  // TODO: allow this to take in a boolean for calculating averages
+def getStats(String access_token, String filename, String team, boolean onlyGetAverages) {
   def pr_request = getGETRequest(access_token, team);
   def parsedResponse = getParsedResponse(pr_request);
   def numOfPRs = parsedResponse.items.size();
   def output = new File(filename);
   output.delete()
   output = new File(filename);
+  if (onlyGetAverages) {
+    output << "Getting average durations for "+team+"\n";
+  }
+  def average_total_time = new Duration(0,0,0,0,0);
+  def average_first_approval_time = new Duration(0,0,0,0,0);
+  def average_po_review_time = new Duration(0,0,0,0,0);
   for (int i = 0; i < numOfPRs; i++) {
     def pr = parsedResponse.items[i];
     def title = pr.title;
-    output << title+"\n";
+    if (!onlyGetAverages) {
+      output << title+"\n";
+    }
     def merged_at = createDate(pr.closed_at);
     def first_approval = getFirstApproval(pr.pull_request.url, access_token);
     def comments_info = getCommentsInfo(pr.comments_url, access_token);
     def created_at = comments_info[0];
     if (created_at != null) {
       def time_open = TimeCategory.minus(merged_at, created_at);
-      output << "Total time: "
-      output << time_open;
-      output << "\n";
+      average_total_time = average_total_time.plus(time_open);
+      if (!onlyGetAverages) {
+        output << "Total time: "
+        output << time_open;
+        output << "\n";
+      }
       if (first_approval != null) {
         def until_first_review = TimeCategory.minus(first_approval, created_at);
-        output << "Time until first approval: "
-        output << until_first_review;
-        output << "\n";
+        average_first_approval_time = average_first_approval_time.plus(until_first_review);
+        if (!onlyGetAverages) {
+          output << "Time until first approval: "
+          output << until_first_review;
+          output << "\n";
+        }
       }
     }
     def po_review = comments_info[1];
     if (po_review != null) {
       def time_in_po_review = TimeCategory.minus(merged_at, po_review);
-      output << "Time between po review and merge: "
-      output << time_in_po_review;
-      output << "\n";
+      average_po_review_time = average_po_review_time.plus(time_in_po_review)
+      if (!onlyGetAverages) {
+        output << "Time between po review and merge: "
+        output << time_in_po_review;
+        output << "\n";
+      }
     }
   }
+  def milli_total = (average_total_time.toMilliseconds()/numOfPRs).longValue();
+  def milli_approval = (average_first_approval_time.toMilliseconds()/numOfPRs).intValue();
+  def milli_po = (average_po_review_time.toMilliseconds()/numOfPRs).intValue();
+  output << "Average time open: "+convertMillisecondsToDateFormat(milli_total)+"\n";
+  output << "Average time in PO review: "+convertMillisecondsToDateFormat(milli_po)+"\n";
+  output << "Average time until first approval: "+convertMillisecondsToDateFormat(milli_approval)+"\n";
+}
+
+def convertMillisecondsToDateFormat(long milliseconds) {
+  return String.format("%02d:%02d:%02d:%02d",
+    TimeUnit.MILLISECONDS.toDays(milliseconds),
+    TimeUnit.MILLISECONDS.toHours(milliseconds)%TimeUnit.HOURS.toHours(1),
+    TimeUnit.MILLISECONDS.toMinutes(milliseconds) % TimeUnit.HOURS.toMinutes(1),
+    TimeUnit.MILLISECONDS.toSeconds(milliseconds) % TimeUnit.MINUTES.toSeconds(1));
 }
 
 if (args.size() == 3 && args[0] == "all-stats") {
-  getStats(args[1], args[2], "all");
-  println("all-stats have been written to "+args[2]);
+  getStats(args[1], args[2], "all", false);
+  println("all-stats has been written to "+args[2]);
 } else if (args.size() == 4 && args[0] == "team-stats") {
-  getStats(args[1], args[2], args[3]);
-  println("team-stats have been written to "+args[2]+" for "+args[3]);
-} else if (args.size() == 3 && args[0] == "team-averages") {
-  println("TODO: Implement for team averages");
+  getStats(args[1], args[2], args[3], false);
+  println("team-stats has been written to "+args[2]+" for "+args[3]);
+} else if (args.size() == 4 && args[0] == "team-averages") {
+  getStats(args[1], args[2], args[3], true);
+  println("team-averages has been written to "+args[2]+" for "+args[3]);
 } else {
   println("Arguments passed did not match any of the commands");
   println("Options: ");
   println("all-stats {access_token} {output_file_path}");
   println("team-stats {access_token} {output_file_path} {team_name}");
-  println("team-averages {team_name} {output_file_path}");
+  println("team-averages {access_token} {team_name} {output_file_path}");
 }
