@@ -4,8 +4,11 @@ import groovy.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 /**
-* Usage: TODO
-* Output detail:
+* TODO: handle multiple pages of PRs (right now limited to first 100 PRs)
+* TODO: Add other platform teams to the all teams
+* TODO: Clean up code
+* TODO: Print out timeout to terminal for how long it takes to run
+* TODO: Add support for time in QE review (QE approval - Tag for QE review)
 */
 
 
@@ -21,7 +24,6 @@ def getGETRequest(String access_token, String team) {
   def get_request = "https://api.github.com/search/issues?access_token="+access_token+
   "&q="+arguments;
 
-  // TODO: need to update this to use paging so that I should more than 30
   return get_request;
 }
 
@@ -87,8 +89,6 @@ def getCommentsInfo(String url, String access_token) {
     } else if (comment.contains("PO review") || comment.contains("merge")) {
       po_review = createDate(comments_response.created_at[j]);
     }
-    // TODO: Get request for QE review
-    // TODO: Get QE approval
   }
   return [created_at, po_review];
 }
