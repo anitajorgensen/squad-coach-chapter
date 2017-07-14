@@ -93,7 +93,7 @@ def getCommentsInfo(String url, String access_token) {
   return [created_at, po_review];
 }
 
-def getStats(String access_token, String filename, String team, boolean onlyGetAverages) {
+def getStats(String access_token, String team, String filename, boolean onlyGetAverages) {
   def pr_request = getGETRequest(access_token, team);
   def parsedResponse = getParsedResponse(pr_request);
   def numOfPRs = parsedResponse.items.size();
@@ -162,7 +162,7 @@ def convertMillisecondsToDateFormat(long milliseconds) {
 }
 
 if (args.size() == 3 && args[0] == "all-stats") {
-  getStats(args[1], args[2], "all", false);
+  getStats(args[1], "all", args[2], false);
   println("all-stats has been written to "+args[2]);
 } else if (args.size() == 4 && args[0] == "team-stats") {
   getStats(args[1], args[2], args[3], false);
@@ -174,6 +174,6 @@ if (args.size() == 3 && args[0] == "all-stats") {
   println("Arguments passed did not match any of the commands");
   println("Options: ");
   println("all-stats {access_token} {output_file_path}");
-  println("team-stats {access_token} {output_file_path} {team_name}");
+  println("team-stats {access_token} {team_name} {output_file_path} ");
   println("team-averages {access_token} {team_name} {output_file_path}");
 }
