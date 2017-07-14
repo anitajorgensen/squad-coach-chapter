@@ -4,12 +4,13 @@ import groovy.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 /**
-* TODO: handle multiple pages of PRs (right now limited to first 100 PRs)
-* TODO: Add other platform teams to the all teams
+* TODO: handle multiple pages of PRs (right now limited to first 100 PRs) - needed to support general average
 * TODO: Clean up code
-* TODO: Print out timeout to terminal for how long it takes to run
+* TODO: Print out time out to terminal for how long it takes to run
 * TODO: Add support for time in QE review (QE approval - Tag for QE review)
 */
+
+def allTeams = ['sail', 'admin-security', 'datalayer', 'scalable-foundation'];
 
 
 def getGETRequest(String access_token, String team) {
@@ -35,10 +36,9 @@ def getArguments(String team) {
   def base = "base:master"
   def teams = "";
   if (team == "all") {
-    def teamSet = ['sail']
-    for (int i=0;i<teamSet.size();i++) {
+    for (int i=0;i<allTeams.size();i++) {
       teams+="team:appian/squad-"+teamSet[i];
-      if (i < teamSet.size()-1) {
+      if (i < allTeams.size()-1) {
         teams += "+"
       }
     }
@@ -98,8 +98,8 @@ def getStats(String access_token, String team, String filename, boolean onlyGetA
   def parsedResponse = getParsedResponse(pr_request);
   def numOfPRs = parsedResponse.items.size();
   def output = new File(filename);
-  output.delete()
-  output = new File(filename);
+  // output.delete()
+  // output = new File(filename);
   if (onlyGetAverages) {
     output << "Getting average durations for "+team+"\n";
   }
@@ -170,10 +170,16 @@ if (args.size() == 3 && args[0] == "all-stats") {
 } else if (args.size() == 4 && args[0] == "team-averages") {
   getStats(args[1], args[2], args[3], true);
   println("team-averages has been written to "+args[2]+" for "+args[3]);
+} else if (args.size() == 3 && args[0] == "all-averages") {
+  for (int i=0;i<allTeams.size();i++) {
+    getStats(args[1], allTeams[i], args[2], true);
+  }
+  println("all-averages has been written to "+args[2]);
 } else {
   println("Arguments passed did not match any of the commands");
   println("Options: ");
-  println("all-stats {access_token} {output_file_path}");
-  println("team-stats {access_token} {team_name} {output_file_path} ");
+  //println("all-stats {access_token} {output_file_path}");
+  //println("team-stats {access_token} {team_name} {output_file_path} ");
   println("team-averages {access_token} {team_name} {output_file_path}");
+  println("all-averages {access_token} {output_file_path}");
 }
