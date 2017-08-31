@@ -13,8 +13,8 @@ def allTeams = ['sail',
                 'datalayer',
               'scalable-foundation'];
 
-def getGETRequest(String access_token, String team) {
-  def args = getArguments(team);
+def getGETRequest(String access_token, String team, String repo) {
+  def args = getArguments(team, repo);
   def arguments = "";
   for (int i=0;i<args.size();i++) {
     arguments += args.get(i)
@@ -28,9 +28,9 @@ def getGETRequest(String access_token, String team) {
   return get_request;
 }
 
-def getArguments(String team) {
+def getArguments(String team, String repoName) {
   def is = "is:merged";
-  def repo = "repo:appian/ae";
+  def repo = "repo:appian/"+repoName;
   def type = "type:pr";
   def merged_after = "merged:>=2017-03-01"
   def base = "base:master"
@@ -96,8 +96,8 @@ def getCommentsInfo(String url, String access_token) {
   return [created_at, po_review];
 }
 
-def getStats(String access_token, String team, String filename, boolean onlyGetAverages) {
-  def pr_request = getGETRequest(access_token, team);
+def getStats(String access_token, String team, String filename, boolean onlyGetAverages, String repo) {
+  def pr_request = getGETRequest(access_token, team, repo);
   def parsedResponse = getParsedResponse(pr_request);
   def numOfPRs = parsedResponse.items.size();
   def output = new File(filename);
@@ -170,17 +170,20 @@ def convertMillisecondsToDateFormat(long milliseconds) {
     TimeUnit.MILLISECONDS.toSeconds(milliseconds) % TimeUnit.MINUTES.toSeconds(1));
 }
 
-if (args.size() == 4 && args[0] == "team-averages") {
-  getStats(args[1], args[2], args[3], true);
+def size = args.size();
+if ((size == 4 || size == 5) && args[0] == "team-averages") {
+  def repo = size == 4 ? "ae" : args[4];
+  getStats(args[1], args[2], args[3], true, repo);
   println("team-averages has been written to "+args[2]+" for "+args[3]);
-} else if (args.size() == 3 && args[0] == "all-averages") {
+} else if ((size == 3 || size == 4) && args[0] == "all-averages") {
+  def repo = size == 3 ? "ae" : args[3];
   for (int i=0;i<allTeams.size();i++) {
-    getStats(args[1], allTeams[i], args[2], true);
+    getStats(args[1], allTeams[i], args[2], true, repo);
   }
   println("all-averages has been written to "+args[2]);
 } else {
   println("Arguments passed did not match any of the commands");
   println("Options: ");
-  println("team-averages {access_token} {team_name} {output_file_path}");
-  println("all-averages {access_token} {output_file_path}");
+  println("team-averages {access_token} {team_name} {output_file_path} {optional - repo}");
+  println("all-averages {access_token} {output_file_path} {optional - repo}");
 }
