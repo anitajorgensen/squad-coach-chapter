@@ -9,9 +9,9 @@ import java.util.concurrent.TimeUnit;
 */
 
 def allTeams = ['sail',
-                'admin-security',
+                /*'admin-security',*/
                 'datalayer',
-                'scalable-foundation'];
+              'scalable-foundation'];
 
 def getGETRequest(String access_token, String team) {
   def args = getArguments(team);
@@ -83,13 +83,13 @@ def getApprovals(String url, String access_token) {
 def getCommentsInfo(String url, String access_token) {
   def comments_request = url+"?access_token="+access_token;
   def comments_response = getParsedResponse(comments_request);
-  def created_at;
-  def po_review;
+  def created_at = null;
+  def po_review = null;
   for (int j = 0; j < comments_response.body.size(); j++) {
     def comment = comments_response.body[j];
-    if (comment.contains("@appian/squad-") && comment.contains("review")) {
+    if (created_at == null && comment.contains("@appian/squad-") && comment.contains("review")) {
       created_at = createDate(comments_response.created_at[j]);
-    } else if (comment.contains("PO review") || comment.contains("merge")) {
+    } else if (po_review == null && (comment.contains("PO review") || comment.contains("merge"))) {
       po_review = createDate(comments_response.created_at[j]);
     }
   }
@@ -110,6 +110,8 @@ def getStats(String access_token, String team, String filename, boolean onlyGetA
   def average_first_approval_time = new Duration(0,0,0,0,0);
   def average_final_approval_time = new Duration(0,0,0,0,0);
   def average_po_review_time = new Duration(0,0,0,0,0);
+  def total_created_at_prs = numOfPRs;
+  def total_po_prs = numOfPRs;
   for (int i = 0; i < numOfPRs; i++) {
     def pr = parsedResponse.items[i];
     def title = pr.title;
@@ -122,6 +124,12 @@ def getStats(String access_token, String team, String filename, boolean onlyGetA
     def final_approval = review_approvals[1];
     def comments_info = getCommentsInfo(pr.comments_url, access_token);
     def created_at = comments_info[0];
+    if (created_at == null) {
+      def body = pr.body;
+      if (body.contains("@appian/squad-") && body.contains("review")) {
+        created_at = createDate(pr.created_at);
+      }
+    }
     if (created_at != null) {
       def time_open = TimeCategory.minus(merged_at, created_at);
       average_total_time = average_total_time.plus(time_open);
@@ -133,21 +141,25 @@ def getStats(String access_token, String team, String filename, boolean onlyGetA
         def until_final_review = TimeCategory.minus(final_approval, created_at);
         average_final_approval_time = average_final_approval_time.plus(until_final_review);
       }
+    } else {
+      total_created_at_prs--;
     }
     def po_review = comments_info[1];
     if (po_review != null) {
       def time_in_po_review = TimeCategory.minus(merged_at, po_review);
       average_po_review_time = average_po_review_time.plus(time_in_po_review)
+    } else {
+      total_po_prs--;
     }
   }
-  def milli_total = (average_total_time.toMilliseconds()/numOfPRs).longValue();
-  def milli_first_approval = (average_first_approval_time.toMilliseconds()/numOfPRs).intValue();
-  def milli_final_approval = (average_final_approval_time.toMilliseconds()/numOfPRs).intValue();
-  def milli_po = (average_po_review_time.toMilliseconds()/numOfPRs).intValue();
+  def milli_total = (average_total_time.toMilliseconds()/total_created_at_prs).longValue();
+  def milli_first_approval = (average_first_approval_time.toMilliseconds()/total_created_at_prs).intValue();
+  def milli_final_approval = (average_final_approval_time.toMilliseconds()/total_created_at_prs).intValue();
+  def milli_po = (average_po_review_time.toMilliseconds()/total_po_prs).intValue();
   output << "Average time open: "+convertMillisecondsToDateFormat(milli_total)+"\n";
-  output << "Average time in PO review: "+convertMillisecondsToDateFormat(milli_po)+"\n";
   output << "Average time until first approval: "+convertMillisecondsToDateFormat(milli_first_approval)+"\n";
   output << "Average time until final approval: "+convertMillisecondsToDateFormat(milli_final_approval)+"\n";
+  output << "Average time in PO review: "+convertMillisecondsToDateFormat(milli_po)+"\n";
 }
 
 def convertMillisecondsToDateFormat(long milliseconds) {
