@@ -9,9 +9,9 @@ import java.util.concurrent.TimeUnit;
 */
 
 def allTeams = ['sail',
-                /*'admin-security',*/
+                'admin-security',
                 'datalayer',
-              'scalable-foundation'];
+                'scalable-foundation'];
 
 def getGETRequest(String access_token, String team, String repo) {
   def args = getArguments(team, repo);
@@ -103,6 +103,7 @@ def getStats(String access_token, String team, String filename, boolean onlyGetA
   def output = new File(filename);
   // output.delete()
   // output = new File(filename);
+  output << "Date: "+(new Date().format('yyyyMMdd'))+"\n";
   if (onlyGetAverages) {
     output << "Getting average durations for "+team+"\n";
   }
@@ -133,13 +134,13 @@ def getStats(String access_token, String team, String filename, boolean onlyGetA
     if (created_at != null) {
       def time_open = TimeCategory.minus(merged_at, created_at);
       average_total_time = average_total_time.plus(time_open);
-      if (first_approval != null) {
+      if (first_approval != null && final_approval != null) {
         def until_first_review = TimeCategory.minus(first_approval, created_at);
         average_first_approval_time = average_first_approval_time.plus(until_first_review);
-      }
-      if (final_approval != null) {
         def until_final_review = TimeCategory.minus(final_approval, created_at);
         average_final_approval_time = average_final_approval_time.plus(until_final_review);
+      } else {
+        total_created_at_prs--;
       }
     } else {
       total_created_at_prs--;
