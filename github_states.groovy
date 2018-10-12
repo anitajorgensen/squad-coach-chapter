@@ -161,6 +161,8 @@ def getStats(String access_token, String team, String filename, boolean onlyGetA
   output << "Average time until first approval: "+convertMillisecondsToDateFormat(milli_first_approval)+"\n";
   output << "Average time until final approval: "+convertMillisecondsToDateFormat(milli_final_approval)+"\n";
   output << "Average time in PO review: "+convertMillisecondsToDateFormat(milli_po)+"\n";
+  output << "Number of Approved PRs: "+total_created_at_prs+"\n";
+  output << "Number of PO Reviewed PRs: "+total_po_prs+"\n";
 }
 
 def convertMillisecondsToDateFormat(long milliseconds) {
