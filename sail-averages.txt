@@ -1,0 +1,9 @@
+Date: 20181013
+Average time open: 03:00:53:11
+Average time to first approval: 00:00:39:47
+Average time to final approval: 01:00:00:24
+Number of PRs in Total Time: 25
+Number of PRs with First Approval: 21
+Number of PRs with Final Approval: 21
+Number of PRs with QE Pass: 0
+Number of PRs with Ready to Merge: 0
