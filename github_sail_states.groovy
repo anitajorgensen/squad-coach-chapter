@@ -52,16 +52,21 @@ def getCommentStats(String access_token, String comments_url) {
     def comment = parsed[k].body;
     if (comment != null) {
       comment = comment.toLowerCase();
-      if (comment.contains("ready to merge") || comment.contains("ready for merge")) {
+      if (comment.contains("merge") && comment.contains("@appian/squad-sail")) {
         time_stats['ready_to_merge'] = createDate(parsed[k].created_at);
-      } else if (comment.contains("qe review")) {
+        println "merge";
+      } else if (comment.contains("qe review") && comment.contains("@brian-cohen")) {
         time_stats['qe_review'] = createDate(parsed[k].created_at);
+        println "qe reviwe";
       } else if (comment.contains("po review") && comment.contains("ready")) {
         time_stats['po_review'] = createDate(parsed[k].created_at);
       } else if (comment.contains("review") && comment.contains("@appian/squad-sail")) {
         time_stats['code_review'] = createDate(parsed[k].created_at);
       } else if (comment.contains("qe") && comment.contains("pass")) {
         time_stats['qe_pass'] = createDate(parsed[k].created_at);
+        println "qe pass";
+      } else if (comment.contains("related artifacts")) {
+        // ignore
       } else {
         // println comment;
       }
@@ -132,7 +137,7 @@ def convertSecondsToDateFormat(long seconds) {
     TimeUnit.SECONDS.toSeconds(seconds) % TimeUnit.MINUTES.toSeconds(1));
 }
 
-def getAllStats(String access_token) {
+def getAllStats(String access_token, def filename) {
   def all_prs = getPRs(access_token);
   def average_total_time = 0L;
   def total_prs = 0;
@@ -170,22 +175,33 @@ def getAllStats(String access_token) {
       }
     }
   }
+  def output = new File(filename);
+  output << "Date: "+(new Date().format('yyyyMMdd'))+"\n";
   if (average_total_time > 0) {
     long average_total_time_seconds = average_total_time/total_prs;
-    println "Average time open: "+convertSecondsToDateFormat(average_total_time_seconds);
+    output << "Average time open: "+convertSecondsToDateFormat(average_total_time_seconds)+"\n";
   }
   if (average_first_approved_time > 0) {
     long average_first_approval_time_seconds = average_first_approved_time/total_approved_prs;
-    println "Average time to first approval: "+convertSecondsToDateFormat(average_first_approval_time_seconds);
+    output << "Average time to first approval: "+convertSecondsToDateFormat(average_first_approval_time_seconds)+"\n";
   }
   if (average_final_approved_time > 0) {
     long average_final_approval_time_seconds = average_final_approved_time/total_approved_prs;
-    println "Average time to final approval: "+convertSecondsToDateFormat(average_final_approval_time_seconds);
+    output << "Average time to final approval: "+convertSecondsToDateFormat(average_final_approval_time_seconds)+"\n";
   }
   if (average_qe_time > 0) {
     long average_qe_time_seconds = average_qe_time/total_qe_prs;
-    println "Average time to QE Pass: "+convertSecondsToDateFormat(average_qe_time_seconds);
+    output << "Average time to QE Pass: "+convertSecondsToDateFormat(average_qe_time_seconds)+"\n";
   }
+  if (average_ready_to_merge_time > 0) {
+    long average_ready_to_merge_time_seconds = average_ready_to_merge_time/total_ready_to_merge_prs;
+    output << "Average time in Ready to Merge: "+convertSecondsToDateFormat(average_ready_to_merge_time_seconds)+"\n";
+  }
+  output << "Number of PRs in Total Time: "+total_prs+"\n";
+  output << "Number of PRs with First Approval: "+total_approved_prs+"\n";
+  output << "Number of PRs with Final Approval: "+total_approved_prs+"\n";
+  output << "Number of PRs with QE Pass: "+total_qe_prs+"\n";
+  output << "Number of PRs with Ready to Merge: "+total_ready_to_merge_prs+"\n";
 }
 
-getAllStats(args[0])
+getAllStats(args[0], args[1])
