@@ -18,7 +18,7 @@ def getAllSailMembers(String access_token) {
 }
 
 def getIndividualIssues(String access_token, String member, List prs_list) {
-  def memberRequest = "https://api.github.com/repos/appian/ae/issues?access_token="+access_token+"&creator="+member+"&state=closed&since=2018-10-01"+"&per_page=100";
+  def memberRequest = "https://api.github.com/repos/appian/ae/issues?access_token="+access_token+"&creator="+member+"&state=closed&since=2018-09-01"+"&per_page=100";
   def parsed = getParsedResponse(memberRequest);
   for (int k = 0; k < parsed.items.size(); k++) {
     def issue = parsed[k];
@@ -30,7 +30,6 @@ def getIndividualIssues(String access_token, String member, List prs_list) {
 
 def getPRs(String access_token) {
   def members = getAllSailMembers(access_token);
-  println members;
   def prs_list = [];
   for (String member : members) {
     getIndividualIssues(access_token, member, prs_list);
@@ -98,13 +97,11 @@ def getApprovals(String url, String access_token) {
 def getIndividualStats(String access_token, String issueUrl) {
   def issueRequest = issueUrl+"?access_token="+access_token;
   def parsed = getParsedResponse(issueRequest);
-  // println parsed;
   def comments_url = parsed.comments_url;
   def prStats = getCommentStats(access_token, comments_url);
   if (prStats != null) {
     prStats['created_at'] = createDate(parsed.created_at);
   }
-  // println parsed.pull_request.url
   def approvals = getApprovals(parsed.pull_request.url, access_token);
   if (prStats != null && approvals != null && approvals.size() == 2) {
     prStats['first_approval'] = approvals['first_approval'];
@@ -167,7 +164,8 @@ def getAllStats(String access_token, def filename) {
       }
       // PO review: How is it tagged when done?
       if (individualTimes['ready_to_merge'] != null && individualTimes['closed_at'] != null) {
-        def timeInReadyToMerge = TimeCategory.minus(individualTimes['ready_to_merge'], individualTimes['closed_at']);
+        def timeInReadyToMerge = getTimeInSeconds(individualTimes['closed_at'], individualTimes['ready_to_merge']);
+        average_ready_to_merge_time += timeInReadyToMerge;
         total_ready_to_merge_prs++;
       }
     }
