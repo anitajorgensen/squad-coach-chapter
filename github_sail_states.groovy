@@ -18,7 +18,7 @@ def getAllSailMembers(String access_token) {
 }
 
 def getIndividualIssues(String access_token, String member, List prs_list) {
-  def memberRequest = "https://api.github.com/repos/appian/ae/issues?access_token="+access_token+"&creator="+member+"&state=closed&since=2018-09-01"+"&per_page=100";
+  def memberRequest = "https://api.github.com/repos/appian/ae/issues?access_token="+access_token+"&creator="+member+"&state=closed&since=2018-10-01"+"&per_page=100";
   def parsed = getParsedResponse(memberRequest);
   for (int k = 0; k < parsed.items.size(); k++) {
     def issue = parsed[k];
