@@ -47,28 +47,28 @@ def getCommentStats(String access_token, String comments_url) {
   def comments_request = comments_url+"?access_token="+access_token;
   def parsed = getParsedResponse(comments_request);
   def time_stats = [:];
-  for (int k = 0; k < parsed.items.size(); k++) {
-    def comment = parsed[k].body;
+  for(Object item : parsed) {
+    def comment = item.body;
     if (comment != null) {
       comment = comment.toLowerCase();
-      if (comment.contains("merge") && comment.contains("@appian/squad-sail")) {
-        time_stats['ready_to_merge'] = createDate(parsed[k].created_at);
-      } else if (comment.contains("qe review") && comment.contains("@brian-cohen")) {
-        time_stats['qe_review'] = createDate(parsed[k].created_at);
-      } else if (comment.contains("po review") && comment.contains("ready")) {
-        time_stats['po_review'] = createDate(parsed[k].created_at);
-      } else if (comment.contains("review") && comment.contains("@appian/squad-sail")) {
-        time_stats['code_review'] = createDate(parsed[k].created_at);
-      } else if (comment.contains("qe") && comment.contains("pass")) {
-        time_stats['qe_pass'] = createDate(parsed[k].created_at);
-      } else if (comment.contains("related artifacts")) {
+      if (comment.contains("related artifacts")) {
         // ignore
+      } else if (comment.contains("merge")) {
+        time_stats['ready_to_merge'] = createDate(item.created_at);
+      } else if (comment.contains("qe review")) {
+        time_stats['qe_review'] = createDate(item.created_at);
+      } else if (comment.contains("po review") && comment.contains("ready")) {
+        time_stats['po_review'] = createDate(item.created_at);
+      } else if (comment.contains("review") && comment.contains("@appian/squad-sail")) {
+        time_stats['code_review'] = createDate(item.created_at);
+      } else if (comment.contains("qe pass")) {
+        time_stats['qe_pass'] = createDate(item.created_at);
       } else {
         // println comment;
       }
     }
-    return time_stats;
   }
+  return time_stats;
 }
 
 def createDate(String stringDate) {
