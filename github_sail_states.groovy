@@ -18,7 +18,7 @@ def getAllSailMembers(String access_token) {
 }
 
 def getIndividualIssues(String access_token, String member, List prs_list) {
-  def memberRequest = "https://api.github.com/repos/appian/ae/issues?access_token="+access_token+"&creator="+member+"&state=closed&since=2018-10-01"+"&per_page=100";
+  def memberRequest = "https://api.github.com/repos/appian/ae/issues?access_token="+access_token+"&creator="+member+"&state=closed&since=2018-10-17"+"&per_page=100";
   def parsed = getParsedResponse(memberRequest);
   for (int k = 0; k < parsed.items.size(); k++) {
     def issue = parsed[k];
@@ -153,6 +153,9 @@ def getAllStats(String access_token, def filename) {
       if (individualTimes['first_approval'] != null && individualTimes['code_review'] != null && individualTimes['final_approval'] != null) {
         def timeToFirstApproval = getTimeInSeconds(individualTimes['first_approval'], individualTimes['code_review']);
         def timeToFinalApproval = getTimeInSeconds(individualTimes['final_approval'], individualTimes['code_review']);
+        if (timeToFirstApproval < 0 || timeToFinalApproval < 0) {
+          continue;
+        }
         average_first_approved_time += timeToFirstApproval;
         average_final_approved_time += timeToFinalApproval;
         total_approved_prs++;
@@ -179,18 +182,26 @@ def getAllStats(String access_token, def filename) {
   if (average_first_approved_time > 0) {
     long average_first_approval_time_seconds = average_first_approved_time/total_approved_prs;
     output << "Average time to first approval: "+convertSecondsToDateFormat(average_first_approval_time_seconds)+"\n";
+  } else {
+    println "BAD FIRST APPROVAL: "+average_first_approved_time;
   }
   if (average_final_approved_time > 0) {
     long average_final_approval_time_seconds = average_final_approved_time/total_approved_prs;
     output << "Average time to final approval: "+convertSecondsToDateFormat(average_final_approval_time_seconds)+"\n";
+  } else {
+    println "BAD FINAL APPROVAL: "+average_final_approved_time
   }
   if (average_qe_time > 0) {
     long average_qe_time_seconds = average_qe_time/total_qe_prs;
     output << "Average time to QE Pass: "+convertSecondsToDateFormat(average_qe_time_seconds)+"\n";
+  } else {
+    println "BAD QE TIME: "+ average_qe_time;
   }
   if (average_ready_to_merge_time > 0) {
     long average_ready_to_merge_time_seconds = average_ready_to_merge_time/total_ready_to_merge_prs;
     output << "Average time in Ready to Merge: "+convertSecondsToDateFormat(average_ready_to_merge_time_seconds)+"\n";
+  } else {
+    println "BAD MERGE TIME:"+average_ready_to_merge_time;
   }
   output << "Number of PRs in Total Time: "+total_prs+"\n";
   output << "Number of PRs with First Approval: "+total_approved_prs+"\n";
