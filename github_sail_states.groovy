@@ -88,7 +88,7 @@ def getApprovals(String url, String access_token) {
         approvals['first_approval'] = createDate(review.submitted_at);
       } else {
         def final_date = createDate(review.submitted_at);
-        if (approvals['first_approval'] < final_date) {
+        if (approvals['first_approval'] > final_date) {
           approvals['final_approval'] = approvals['first_approval'];
           approvals['first_approval'] = final_date;
         } else {
