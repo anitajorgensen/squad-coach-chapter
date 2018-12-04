@@ -37,3 +37,13 @@ Number of PRs with First Approval: 11
 Number of PRs with Final Approval: 11
 Number of PRs with QE Pass: 11
 Number of PRs with Ready to Merge: 10
+Date: 20181204
+Average time open: 04:00:50:12
+Average time to first approval: 00:00:27:18
+Average time to final approval: 01:00:01:50
+Average time to QE Pass: 00:00:22:36
+Average time in Ready to Merge: 00:00:18:34
+Number of PRs in Total Time: 80
+Number of PRs with First Approval: 59
+Number of PRs with Final Approval: 59
+Number of PRs with QE Pass: 48
