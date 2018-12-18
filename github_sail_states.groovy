@@ -18,7 +18,7 @@ def getAllSailMembers(String access_token) {
 }
 
 def getIndividualIssues(String access_token, String member, List prs_list) {
-  def memberRequest = "https://api.github.com/repos/appian/ae/issues?access_token="+access_token+"&creator="+member+"&state=closed&since=2018-10-28"+"&per_page=100";
+  def memberRequest = "https://api.github.com/repos/appian/ae/issues?access_token="+access_token+"&creator="+member+"&state=closed&since=2018-11-28"+"&per_page=100";
   def parsed = getParsedResponse(memberRequest);
   for (int k = 0; k < parsed.items.size(); k++) {
     def issue = parsed[k];
@@ -171,7 +171,7 @@ def getAllStats(String access_token, def filename) {
         average_qe_time += timeInQEReview;
         total_qe_prs++;
       }
-      // PO review: How is it tagged when done?
+      // TODO: PO review: How is it tagged when done?
       if (individualTimes['ready_to_merge'] != null && individualTimes['closed_at'] != null) {
         def timeInReadyToMerge = getTimeInSeconds(individualTimes['closed_at'], individualTimes['ready_to_merge']);
         average_ready_to_merge_time += timeInReadyToMerge;
