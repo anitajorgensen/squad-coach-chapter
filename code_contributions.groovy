@@ -53,7 +53,9 @@ SAIL_MEMBERS = [
   "Mansoor Syed",
   "Carol Jung",
   "Jodi Flanders",
-  "Nate Akkarapitakchai"
+  "Nate Akkarapitakchai",
+  "Susumu Noda",
+  "Marcel Valdez"
 ];
 
 output = new File("output.txt");
@@ -120,18 +122,18 @@ def getSAILCommits() {
     def end = date[1];
     int total = 0;
     for (member in SAIL_MEMBERS) {
-      def command = "git shortlog --author=\""+member+"\" --since \""+start+"\" --until \""+end+"\" -s -- appian-libraries/expression-evaluator/ | awk '{ commits += \$1;} END { printf \"commits:  %s\\n\", commits }'";
+      //def command = "git shortlog --author=\""+member+"\" --since \""+start+"\" --until \""+end+"\" -s -- appian-libraries/expression-evaluator/ | awk '{ commits += \$1;} END { printf \"commits:  %s\\n\", commits }'";
+      def command = "git log --author=\""+member+"\" --since \""+start+"\" --until \""+end+"\" --pretty=format: -- appian-libraries/expression-evaluator/| sort | uniq -c | sort -nr"
       //println command;
       def proc = ['bash', '-c', command].execute();
-      try {
-        proc.waitForOrKill(3000);
+      proc.waitForOrKill(3000);
 
-        //println "Process exit code: ${proc.exitValue()}"
-        //println "Std Err: ${proc.err.text}"
-        //println "["+member+"]"+start +" to "+ end +": "+ "${proc.in.text}"
-        total+=Integer.valueOf(${proc.in.text});
-      } catch (Exception e) {
-        //println "Ignored for :" + member + ", "+start +"-"+end;
+      //println "Process exit code: ${proc.exitValue()}"
+      //println "Std Err: ${proc.err.text}"
+      def result = proc.getText().trim();
+      if (result != "") {
+        //println output.toInteger();
+        total+=result.toInteger();
       }
     }
     output << "Total commits for "+start+"-"+end+": "+total+"\n";
@@ -144,18 +146,18 @@ def getCommits() {
     def start = date[0];
     def end = date[1];
     int total = 0;
-    def command = "git shortlog --since \""+start+"\" --until \""+end+"\" -s -- appian-libraries/expression-evaluator/ | awk '{ commits += \$1;} END { printf \"commits:  %s\\n\", commits }'";
+    //def command = "git shortlog --since \""+start+"\" --until \""+end+"\" -s -- appian-libraries/expression-evaluator/ | awk '{ commits += \$1;} END { printf \"commits:  %s\\n\", commits }'";
+    def command = "git log --since \""+start+"\" --until \""+end+"\" --pretty=format: -- appian-libraries/expression-evaluator/ | sort | uniq -c | sort -nr"
     //println command;
     def proc = ['bash', '-c', command].execute();
-    try {
-      proc.waitForOrKill(3000);
+    proc.waitForOrKill(3000);
 
-      //println "Process exit code: ${proc.exitValue()}"
-      //println "Std Err: ${proc.err.text}"
-      //println "["+member+"]"+start +" to "+ end +": "+ "${proc.in.text}"
-      total+=Integer.valueOf(${proc.in.text});
-    } catch (Exception e) {
-      //println "Ignored for :" + member + ", "+start +"-"+end;
+    //println "Process exit code: ${proc.exitValue()}"
+    //println "Std Err: ${proc.err.text}"
+    def result = proc.getText().trim();
+    if (result != "") {
+      //println output.toInteger();
+      total+=result.toInteger();
     }
     output << "Total commits for "+start+"-"+end+": "+total+"\n";
   }
